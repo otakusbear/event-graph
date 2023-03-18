@@ -1,6 +1,7 @@
 <script> 
 import { useRouter } from 'vue-router'
 import { defineComponent, ref } from 'vue';
+import EventChain from './EventChain.vue';
 const datas = [{
   title: '孙宏斌许家印先后“入坑”还有谁敢投资贾跃亭？',
 }, {
@@ -11,12 +12,13 @@ const datas = [{
   title: '孙宏斌许家印先后“入坑”还有谁敢投资贾跃亭',
 }];
 export default defineComponent({
-  setup() {
-    return {
-      datas,
-      ysj:'资金支持'
-    };
-  },
+    setup() {
+        return {
+            datas,
+            ysj: "资金支持"
+        };
+    },
+    components: { EventChain }
 });
 </script>
 
@@ -50,8 +52,8 @@ export default defineComponent({
         <a-tab-pane key="2" :tab="`果事件:${ysj}`">果事件
 
         </a-tab-pane>
-        <a-tab-pane key="3" tab="事件链">事件链
-
+        <a-tab-pane key="3" tab="事件链">
+          <EventChain></EventChain>
         </a-tab-pane>
         <template #leftExtra>
             <div>
@@ -85,8 +87,8 @@ export default defineComponent({
         <a-tab-pane key="5" :tab="`果事件:${ysj}`">果事件
 
         </a-tab-pane>
-        <a-tab-pane key="6" tab="事件链">事件链
-
+        <a-tab-pane key="6" tab="事件链">
+          <EventChain></EventChain>
         </a-tab-pane>
         <template #leftExtra>
             <div>
@@ -100,6 +102,21 @@ export default defineComponent({
                 <a-tag color="orange">资金加持</a-tag>
             </div>
         </template>
+    </a-tabs>
+    <a-tabs v-model:activeKey="activeKey" class="tabs" defaultActiveKey="1">
+        <a-tab-pane key="1" :tab="`源事件:${ysj}`">源事件
+
+        </a-tab-pane>
+        <a-tab-pane key="2" :tab="`泛化后事件:${ysj}`">
+          <EventChain></EventChain>
+        </a-tab-pane>
+       
+        <template #leftExtra>
+            <div>
+                事件泛化：
+            </div>
+        </template>
+        
     </a-tabs>
 </div>
 </template>
