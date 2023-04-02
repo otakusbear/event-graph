@@ -125,6 +125,9 @@ const initGraph = () => {
         container: container,  // String | HTMLElement，必须，在 Step 1 中创建的容器 id 或容器本身
         width,              // Number，必须，图的宽度
         height,             // Number，必须，图的高度
+        modes: {
+            default: ['zoom-canvas', 'drag-canvas']
+        }
     });
 
     graph.data(data);  // 读取 Step 2 中的数据源到图上
