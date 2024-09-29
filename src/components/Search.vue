@@ -1,174 +1,144 @@
-<script> 
-import { useRouter } from 'vue-router'
+<script>
+import { useRouter,useRoute } from 'vue-router'
 import { defineComponent, ref } from 'vue';
-import EventChain from './EventChain.vue';
-const datas = [{
-  title: '孙宏斌许家印先后“入坑”还有谁敢投资贾跃亭？',
-}, {
-  title: '孙宏斌许家印先后“入坑”还有谁敢投资贾跃亭',
-}, {
-  title: '孙宏斌许家印先后“入坑”还有谁敢投资贾跃亭',
-}, {
-  title: '孙宏斌许家印先后“入坑”还有谁敢投资贾跃亭',
-}];
-export default defineComponent({
-    setup() {
-        return {
-            datas,
-            ysj: "资金支持"
-        };
-    },
-    components: { EventChain }
+import Nar from './Nar.vue';
+import { useStore } from 'vuex'
+import axios from 'axios';
+import newGraph from './newGraph.vue'
+import Graph from './Graph.vue'
+
+export default({
+  setup() {
+    const store = useStore();
+    const lists=store.state.searchData
+    const router = useRouter();
+    const getDetail=value=>{
+        let self = this;
+        axios.get('/api/event-data', {
+          params: { event_topic: value },
+        }).then(function (response) {
+          store.commit('getTitle',value)
+          store.commit('getEvent', response.data);
+          router.push({ path: '/detail'})
+        })
+    }
+    const toSearch=value=>{
+      let self = this;
+      self.input=value
+      console.log(self.input)
+      axios.get('/api/search', {
+          params: { content: value },
+      }).then(function (response) {
+        store.commit('getTitle',response.data[0].title)
+        store.commit('getSear', response.data);
+        router.push({ path: '/search'})
+      })
+    }
+    return {
+      lists,
+      getDetail,
+      toSearch
+    };
+  },
+  components: { Nar,newGraph,Graph }
 });
 </script>
 
 <template>
-<div class="h">
-    <a-input-search
-      class="search"
-      v-model:value="value"
-      placeholder="input search text"
-      enter-button="Search"
-      size="large"
-      @search="onSearch"
-    />
-</div>
-<div id="top-content">
-    <a-card style="width: 80%" class="card">
-        <div class="h1">
-            <span>事件类型：</span> 
-            <a-tag color="orange">制造</a-tag>
-            <span>该事件类型定义的论元：</span> 
-            <a-tag color="orange">制造</a-tag>
-            <a-tag color="orange">制造</a-tag>       
-        </div>
-        <p>信息资讯</p>
-        <p>贾跃亭再获一亿美元融资贾跃亭又赢了！率合伙人重组ff董事会</p>
-    </a-card>
-    <a-tabs v-model:activeKey="activeKey" class="tabs" defaultActiveKey="1">
-        <a-tab-pane key="1" :tab="`因事件:${ysj}`">因事件
-
-        </a-tab-pane>
-        <a-tab-pane key="2" :tab="`果事件:${ysj}`">果事件
-
-        </a-tab-pane>
-        <a-tab-pane key="3" tab="事件链">
-          <EventChain></EventChain>
-        </a-tab-pane>
-        <template #leftExtra>
-            <div>
-                前序原因：
-                <a-tag color="orange">资金加持</a-tag>
+  <a-layout :style="{minHeight:'100vh'}">
+    <Nar></Nar>
+    <a-layout-content :style="{ padding: '30px 0' }">
+      <div class="sear">
+        <a-input-search
+            :style="{width: '600px'}"
+            v-model:value="value"
+            placeholder="请输入您想要了解的事件"
+            enter-button="搜索"
+            size="large"
+            @search="toSearch"
+        />
+      </div>
+      <div class="main">
+          <div class="left1">
+            <div  v-for="list in lists">
+              <div @click="getDetail(list.title)">
+                <div class="title1">{{list.title}}</div>
+                <div class="content1">{{list.des}}</div>
+              </div>
+              <a-divider />
+            </div>   
+          </div>
+          <div class="right1">
+            <div class="up" style="overflow: hidden">
+              <Graph></Graph>
             </div>
-        </template>
-        <template #rightExtra>
-            <div>
-                进一步搜索：
-                <a-tag color="orange">资金加持</a-tag>
+            <div class="down" style="overflow: hidden">
+              <newGraph></newGraph>
             </div>
-        </template>
-    </a-tabs>
-    <a-tabs v-model:activeKey="activeKey" class="tabs" defaultActiveKey="4">
-        <a-tab-pane key="4" :tab="`因事件:${ysj}`">
-            <a-list item-layout="horizontal" :data-source="datas">
-                <template #renderItem="{ item }">
-                  <a-list-item>
-                    <a-list-item-meta
-                      description="据了解贾跃亭造车计划的加速推进得益于资金加持"
-                    >
-                      <template #title>
-                        <a href="#">{{ item.title }}</a>
-                      </template>
-                    </a-list-item-meta>
-                  </a-list-item>
-                </template>
-              </a-list>
-        </a-tab-pane>
-        <a-tab-pane key="5" :tab="`果事件:${ysj}`">果事件
-
-        </a-tab-pane>
-        <a-tab-pane key="6" tab="事件链">
-          <EventChain></EventChain>
-        </a-tab-pane>
-        <template #leftExtra>
-            <div>
-                后序结果：
-                <a-tag color="orange">资金加持</a-tag>
-            </div>
-        </template>
-        <template #rightExtra>
-            <div>
-                进一步搜索：
-                <a-tag color="orange">资金加持</a-tag>
-            </div>
-        </template>
-    </a-tabs>
-    <a-tabs v-model:activeKey="activeKey" class="tabs" defaultActiveKey="1">
-        <a-tab-pane key="1" :tab="`源事件:${ysj}`">源事件
-
-        </a-tab-pane>
-        <a-tab-pane key="2" :tab="`泛化后事件:${ysj}`">
-          <EventChain></EventChain>
-        </a-tab-pane>
-       
-        <template #leftExtra>
-            <div>
-                事件泛化：
-            </div>
-        </template>
-        
-    </a-tabs>
-</div>
+          </div>
+      </div>     
+    </a-layout-content>
+  </a-layout>
 </template>
 
-<style scoped>
-.h1{
-    border-bottom: 1px solid #f0f0f0;
-    padding: 10px;
+<style>
+.sear{
+    margin-left: 100px ;
+    margin-bottom: 20px;
 }
-.h{
-    background-color: rgb(199, 203, 203);
-    position: fixed;
-    z-index: 5;
-    width: 100%;
-    height: 80px;
+.main{
+    display: flex;
+    margin:0 100px ;
 }
-#top-content{
-    height: 100%;
-    min-height: 100vh;
-    background-image: url('./static/picture/top-bg.png');
-    background-repeat: repeat;
-    background-size: 15px 15px;
-    padding-bottom: 30px;
-    padding-top: 100px;
-}
-.search{
+.left1{
+    width: calc(100vw - 1010px);
+    min-width: 200px;
+    /* border: 3px solid #fff;
     border-radius: 8px;
-    width: 80%;
-    margin-left: 10%;
-    margin-right: 10%;
-    margin-top: 15px;
+    background-color: #F0F8FF; */
+    /* padding: 30px; */
+    margin-right: 30px;
 }
-.card{
-    border-radius: 8px;
-    margin-left: 10%;
-    margin-right: 10%;
-    margin-bottom: 30px;
+.up{
+  border: 3px solid #fff;
+  border-radius: 8px;
+  width: 508px;
+  height: 500px;
 }
-.tabs{
-    border-radius: 8px;
-    margin-left: 10%;
-    margin-right: 10%;
-    margin-bottom: 30px;
-    background-color: #fff;
-    padding: 20px;
+.down{
+  border: 3px solid #fff;
+  border-radius: 8px;
+  width: 508px;
+  height: 500px;
 }
-.tabs-extra-demo-button {
-  margin-right: 16px;
+/* .zindex{
+  border: 1px solid #fff;
+  border-radius: 8px;
+  overflow: hidden; 
+  z-index: 9999998; 
+  position: fixed; 
+  width: 500px;
+  height: 500px;
+  background: 
+  rgb(0, 0, 0); 
+  opacity: 0.6;
+} */
+.title1{ 
+  font-family: 'Palanquin Dark', sans-serif;
+  font-weight: 800;
+  font-size: 18px;
+  color: 	#1a0dab;
+  margin-bottom: 5px;
 }
-
-.ant-row-rtl .tabs-extra-demo-button {
-  margin-right: 0;
-  margin-left: 16px;
+.title1:hover {
+  cursor: pointer;
+  text-decoration:underline;
+}
+.content1{
+  overflow: hidden;
+    -webkit-line-clamp: 3;
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
 }
 </style>
