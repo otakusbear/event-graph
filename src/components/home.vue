@@ -62,10 +62,10 @@
 
 <!--  inactive-text="时序关系">-->
 <!--</el-switch>-->
-          <el-switch @change="toggleSubRelations"
-  v-model="show1"
-  inactive-text="层次关系">
-</el-switch>
+<!--          <el-switch @change="toggleSubRelations"-->
+<!--  v-model="show1"-->
+<!--  inactive-text="层次关系">-->
+<!--</el-switch>-->
 <!--          <el-switch @change="toggleCausalRelations"-->
 <!--  v-model="show3"-->
 
@@ -99,7 +99,7 @@
 <div v-for="event in displayedEvents" :key="event.index">
     <el-card class="card-fade" style="color: white; background: linear-gradient(to right, #3464e0, #9214f4)">
       <div style="display: flex; justify-content: space-between;">
-        <h4 style="color: white">{{ event.formatted_triple }}</h4>
+<!--        <h4 style="color: white">{{ event.formatted_triple }}</h4>-->
 <!--        <a style="color: #40a9ff;background-color: white;border-radius: 10px;padding: 5px;text-align: center">事件发生概率：{{ event.prob }}</a>-->
       </div>
       <p>AI判断依据：{{event.reason}}</p>
@@ -678,16 +678,19 @@ this.eventloading = true;
       break;
     }
     buffer += new TextDecoder('utf-8').decode(value);
-    if (flag){
-      if(buffer.includes('{')){
-        buffer = "";
-        flag=false;
+    console.log(buffer);
+    if (flag) {
+      const firstCurlyBraceIndex = buffer.indexOf('{');
+      if (firstCurlyBraceIndex !== -1) {
+        // 如果找到了 '{'，则截取 '{' 之后的部分
+        buffer = buffer.slice(firstCurlyBraceIndex + 1);
+        flag = false;
       }
     }
     // if (buffer[0]=='{'){
     //   buffer=buffer.substring(1)
     // }
-    console.log(buffer);
+
     let match = buffer.match(/\{.*?("event":.*?[^{}]*?)\}/s);
 
     while (match) {
