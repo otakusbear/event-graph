@@ -45,7 +45,7 @@
               <el-card class="card-fade" style="color: white; background: linear-gradient(to right, #40a9ff, #1890ff)" @click="openLink(event.link)">
                     <div style="display: flex; justify-content: space-between;">
       <h4 style="color: white">{{ event.title }}</h4>
-      <a :href="'http://' + event.source" style="    color: #40a9ff;background-color: white;border-radius: 10px;padding: 5px;text-align: center">{{ sourceLabel(event.source) }}</a>
+      <a @click="openLink(event.link)" style="    color: #40a9ff;background-color: white;border-radius: 10px;padding: 5px;text-align: center">{{ sourceLabel(event.source) }}</a>
     </div>
 <!--                <p>{{ event.content }}</p>-->
               </el-card>
@@ -57,20 +57,20 @@
 
       <div style="flex: 1" id="graph">
         <div style="text-align: center;margin:10px;display: flex;justify-content: space-evenly">
-          <el-switch @change="toggleTimeRelations"
-  v-model="show2"
+<!--          <el-switch @change="toggleTimeRelations"-->
+<!--  v-model="show2"-->
 
-  inactive-text="时序关系">
-</el-switch>
+<!--  inactive-text="时序关系">-->
+<!--</el-switch>-->
           <el-switch @change="toggleSubRelations"
   v-model="show1"
   inactive-text="层次关系">
 </el-switch>
-          <el-switch @change="toggleCausalRelations"
-  v-model="show3"
+<!--          <el-switch @change="toggleCausalRelations"-->
+<!--  v-model="show3"-->
 
-  inactive-text="因果关系">
-</el-switch>
+<!--  inactive-text="因果关系">-->
+<!--</el-switch>-->
         </div>
         <div id="buttonbar" style="text-align: center;margin: 10px">
 
@@ -92,7 +92,10 @@
 <!--  <el-step title="消退阶段" ></el-step>-->
 <!--  <el-step v-if="activeStep>=3" title="预测阶段" ></el-step>-->
 <!--</el-steps>-->
-<div ref="network2" id="network2" style="width: 100%;"></div>
+        <div id="main-network-container" style="position: relative;width: 100%">
+          <div ref="legendContainer" id="legend-container" style="position: absolute;top: 0;left: 0;width: 152px; height: 75px; border-radius: 14px;background: white; z-index: 1;   border: 1px solid #ccc; padding: 10px;"></div>
+          <div ref="network2" id="network2" style="width: 100%;height: 600px"></div></div>
+
 <div v-for="event in displayedEvents" :key="event.index">
     <el-card class="card-fade" style="color: white; background: linear-gradient(to right, #3464e0, #9214f4)">
       <div style="display: flex; justify-content: space-between;">
@@ -398,7 +401,7 @@ export default {
       openLink(link) {
     window.open(link, '_blank');
   },
-   handleSelectChange() {
+   async handleSelectChange() {
     if (!this.selectedEventType) {
         alert('请输入检索词');
         return;
@@ -410,7 +413,7 @@ export default {
 this.isSearchClicked = true;
     this.bingSearch();
     this.similarTopic();
-    this.getChunk();
+    await this.getChunk();
     this.network.fit();
     }
   },
@@ -582,6 +585,11 @@ if (response.data.startsWith('\n```json\n') && response.data.endsWith('\n```')) 
   const jsonStr = response.data.slice('\n```json\n'.length, -'\n```'.length);
   // 解析JSON字符串
   data = JSON.parse(jsonStr);
+} else if (response.data.startsWith('```json\n') && response.data.endsWith('\n```')) {
+  // 从Markdown代码块中提取出JSON字符串
+  const jsonStr = response.data.slice('```json\n'.length, -'\n```'.length);
+  // 解析JSON字符串
+  data = JSON.parse(jsonStr);
 } else {
   // 如果响应数据不是被包裹在Markdown代码块中的JSON字符串，那么直接进行解析
   data = JSON.parse(response.data);
@@ -631,6 +639,7 @@ if (response.data.startsWith('\n```json\n') && response.data.endsWith('\n```')) 
 
 
       });
+  this.network.fit();
   this.activeStep += 1;
   this.eventloading=false;
       }
@@ -803,6 +812,8 @@ this.eventloading = true;
     this.showSubRelations = false;
     this.showTimeRelations = false;
     this.showCausalRelations = false;
+    this.toggleCausalRelations();
+    this.toggleTimeRelations();
     this.eventloading = false;
     this.activeStep += 1;
     },
@@ -1003,6 +1014,23 @@ async toggleTimeRelations() {
 
   },
   mounted() {
+    var legendContainer = this.$refs.legendContainer;
+
+  // 时序关系图例
+  var timingLegend = document.createElement('div');
+  timingLegend.innerHTML = `
+    <div class="legend-line timing-line"></div>
+    <div class="legend-text">时序关系</div>
+  `;
+  legendContainer.appendChild(timingLegend);
+
+  // 因果关系图例
+  var causeEffectLegend = document.createElement('div');
+  causeEffectLegend.innerHTML = `
+    <div class="legend-line cause-effect-line"></div>
+    <div class="legend-text">因果关系</div>
+  `;
+  legendContainer.appendChild(causeEffectLegend);
     this.network = new Network(document.getElementById('network2'), { nodes: this.nodes, edges: this.edges }, {layout: {
     hierarchical: {
       enabled: true,
@@ -1017,7 +1045,12 @@ async toggleTimeRelations() {
 
     // dragView: false // 禁止拖动整个视图
   },
-    clickToUse: true});
+    clickToUse: true,
+    edges: {
+    smooth: {
+      type: 'curvedCW', // 或 'curvedCCW'，根据需要选择
+      roundness: 0.3
+    }}});
 
     // 添加click事件监听器
 // this.network.on('click', function (params) {
@@ -1516,5 +1549,34 @@ li{
   width: 100px;
   height: 100px;
   margin-bottom: 10px;
+}
+</style>
+<style>
+/*图例样式*/
+.legend-line {
+  display: inline-block;
+  height: 10px;
+  margin: 5px 0;
+  vertical-align: middle;
+}
+
+.legend-text {
+  display: inline-block;
+  vertical-align: middle;
+  margin-left: 10px;
+}
+
+.timing-line {
+  width: 50px;
+  border-bottom: 3px solid #c06c84;
+  height: 6px; /* 稍微调整高度以匹配虚线效果 */
+  margin-top: 2px; /* 调整垂直居中 */
+}
+
+.cause-effect-line {
+  width: 50px;
+  border-bottom: 3px dashed #355c7d; /* 虚线效果通过 border 实现 */
+  height: 6px; /* 稍微调整高度以匹配虚线效果 */
+  margin-top: 2px; /* 调整垂直居中 */
 }
 </style>

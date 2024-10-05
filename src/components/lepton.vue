@@ -25,6 +25,16 @@
   <div class="container">
     <div class="header" style="font-size: 24px;text-align: center">事理图谱</div>
     <div class="chart" style="text-align: center" id="chart"></div>
+    <a-modal
+      v-model:visible="isModalVisible"
+      :title="modalTitle"
+      width="800px"
+      footer=''
+    >
+      <div ref="networkContainer" id="networkContainer" style="width: 100%; height: 600px;"></div>
+      <h5>总结</h5>
+      <div v-html="explaination" style="margin-bottom: 20px;"></div>
+    </a-modal>
   </div>
 
 </template>
@@ -45,11 +55,20 @@ export default {
       nodes:new DataSet(),
       edges:new DataSet(),
       data: null,
-      select_type:null,//
+      select_type:null,
+      explaination: '',
       offset:0,
+      isNodeSelected: false,
+      isModalVisible: false,
+      network: null,
     }
   },
   components: { Nar },
+  computed: {
+    modalTitle() {
+      return `${this.select_type} 事理图谱`;
+    },
+  },
   mounted() {
     this.loadData()
   },
@@ -64,44 +83,65 @@ export default {
 },
 
     async openPopupWindow(d) {
-  // 创建一个新的 div 元素作为悬浮窗口
-  const popupWindow = document.createElement('div');
-  popupWindow.id = 'popupWindow';
-  popupWindow.style.position = 'fixed';
-  popupWindow.style.zIndex = '10';
-  popupWindow.style.background = 'transparent';
-popupWindow.style.top = '4%';  // 设置宽度
-      popupWindow.style.left = '33%';  // 设置宽度
-  popupWindow.style.borderRadius = '50%';  // 设置为圆形
-  popupWindow.style.width = '700px';  // 设置宽度
-  popupWindow.style.height = '700px';  // 设置高度
-  // popupWindow.style.padding = '10px';
-      popupWindow.style.overflow = 'hidden';
-  popupWindow.style.boxShadow = '0 0 10px rgba(0,0,0,0.5)';
-  document.body.appendChild(popupWindow);
+//   // 创建一个新的 div 元素作为悬浮窗口
+//   const popupWindow = document.createElement('div');
+//   popupWindow.id = 'popupWindow';
+//   popupWindow.style.position = 'fixed';
+//   popupWindow.style.zIndex = '10';
+//   popupWindow.style.background = 'transparent';
+// popupWindow.style.top = '4%';  // 设置宽度
+//       popupWindow.style.left = '33%';  // 设置宽度
+//   popupWindow.style.borderRadius = '50%';  // 设置为圆形
+//   popupWindow.style.width = '700px';  // 设置宽度
+//   popupWindow.style.height = '700px';  // 设置高度
+//   // popupWindow.style.padding = '10px';
+//       popupWindow.style.overflow = 'hidden';
+//   popupWindow.style.boxShadow = '0 0 10px rgba(0,0,0,0.5)';
+//   document.body.appendChild(popupWindow);
+//
+//   // 创建一个新的 div 元素作为 vis-network 的容器
+//   const networkContainer = document.createElement('div');
+//   networkContainer.style.width = '700px';
+//   networkContainer.style.height = '700px';
+//   networkContainer.style.borderRadius = '50%';
+//   popupWindow.appendChild(networkContainer);
+//   // 创建一个新的 div 元素作为显示文字的区域
+//   const explanationDiv = document.createElement('div');
+//   explanationDiv.style.position = 'absolute';  // 设置为绝对定位
+//   explanationDiv.style.bottom = '60px';  // 距离底部一定距离，为关闭按钮留出空间
+//   explanationDiv.style.left = '10px';  // 距离左边一定距离
+//   explanationDiv.style.right = '10px';  // 距离右边一定距离，使文本区域宽度自适应
+//   explanationDiv.style.padding = '10px';
+//   explanationDiv.style.backgroundColor = 'rgba(255, 255, 255, 0.8)';  // 半透明背景
+//   explanationDiv.style.borderRadius = '10px';  // 圆角边框
+//   explanationDiv.style.boxShadow = '0 0 5px rgba(0,0,0,0.3)';  // 阴影效果
+//   explanationDiv.style.zIndex = '9';  // 确保文本区域在 networkContainer 之下
+//   explanationDiv.style.color = '#000';  // 文本颜色
+//   explanationDiv.style.fontSize = '16px';  // 字体大小
+//   explanationDiv.style.lineHeight = '1.5';  // 行高
+//   explanationDiv.style.overflowY = 'auto';  // 如果文本过长，允许垂直滚动
+//   explanationDiv.style.maxHeight = 'calc(100% - 80px)';  // 最大高度，为关闭按钮留出空间
+//   explanationDiv.textContent = this.explanation;  // 设置文本内容
+//   popupWindow.appendChild(explanationDiv);
+//   // 创建一个新的 div 元素作为关闭按钮
+//   const closeButton = document.createElement('button');
+//   closeButton.textContent = '关闭';
+//   closeButton.style.position = 'absolute';
+//   closeButton.style.bottom = '10px'; // 靠近底部
+//   closeButton.style.left = '50%';
+//   closeButton.style.transform = 'translateX(-50%)';
+//   closeButton.style.cursor = 'pointer'; // 鼠标悬停时显示指针
+//   closeButton.style.zIndex = '11'; // 确保按钮在popupWindow之上
+//       closeButton.style.borderRadius = '8px';
+//   popupWindow.appendChild(closeButton);
+//
+//   // 为关闭按钮添加点击事件监听器
+//   closeButton.addEventListener('click', function() {
+//     popupWindow.style.display = 'none'; // 隐藏悬浮窗口
+//
+//   });
 
-  // 创建一个新的 div 元素作为 vis-network 的容器
-  const networkContainer = document.createElement('div');
-  networkContainer.style.width = '700px';
-  networkContainer.style.height = '700px';
-  networkContainer.style.borderRadius = '50%';
-  popupWindow.appendChild(networkContainer);
-  // 创建一个新的 div 元素作为关闭按钮
-  const closeButton = document.createElement('button');
-  closeButton.textContent = '关闭';
-  closeButton.style.position = 'absolute';
-  closeButton.style.bottom = '10px'; // 靠近底部
-  closeButton.style.left = '50%';
-  closeButton.style.transform = 'translateX(-50%)';
-  closeButton.style.cursor = 'pointer'; // 鼠标悬停时显示指针
-  closeButton.style.zIndex = '11'; // 确保按钮在popupWindow之上
-      closeButton.style.borderRadius = '8px';
-  popupWindow.appendChild(closeButton);
 
-  // 为关闭按钮添加点击事件监听器
-  closeButton.addEventListener('click', function() {
-    popupWindow.style.display = 'none'; // 隐藏悬浮窗口
-  });
 //     // 创建一个新的 div 元素作为按钮的容器
 //   const buttonContainer = document.createElement('div');
 //   buttonContainer.style.display = 'flex';
@@ -205,6 +245,10 @@ popupWindow.style.top = '4%';  // 设置宽度
 //   };
 //   buttonContainer.appendChild(rightButton);
   // 调用 getEventData 函数获取事件数据
+      // 打开 Modal 并初始化网络图谱
+
+    this.isModalVisible = true;
+    // await initNetwork();
   await this.loadEventGraphData();
 
   // 使用 vis-network 创建图谱
@@ -212,14 +256,16 @@ popupWindow.style.top = '4%';  // 设置宽度
     nodes: this.nodes,
     edges: this.edges
   };
-  const options = {};  // 你可以在这里设置 Network 的选项
-  this.network = new Network(networkContainer, data, options);
+  console.log(this.nodes);
+  const options = {clickToUse: true,};  // 你可以在这里设置 Network 的选项
+  const container = this.$refs.networkContainer;
+  this.network = new Network(container, data, options);
 },
     async loadEventGraphData() {
 
   const eventData = pattern[this.select_type];
-
-console.log(eventData)
+  this.explaination = eventData.explain;
+console.log(this.explaination)
 
   // 更新节点和边
   this.nodes.clear();
@@ -377,7 +423,7 @@ async getEventData(offset=0) {
       const svg = d3.select("#chart")
         .append("svg")
         .style("width", "80%")
-        .style("overflow", "visible")
+        .style("overflow", "hidden")
         .style("cursor","pointer")
         .on("click", () => zoom(root));
       // 获取SVG的宽度，并将其设置为高度
@@ -414,11 +460,18 @@ const circle = svg.selectAll("circle")
   .on("click", (event, d) => {
     if (focus !== d) zoom(d), event.stopPropagation();
     this.hidePopupWindow();
-    if (d.depth === 2&&this.select_type!==d.data.name) {
+    if (d.depth === 2) {
+      if(d.data.name !== this.select_type) this.isNodeSelected = false;
+      this.isNodeSelected = !this.isNodeSelected;
       this.select_type=d.data.name;
       console.log(this.select_type)
-    this.openPopupWindow(d);
-  }
+      if (this.isNodeSelected) {
+            // 如果节点被选中（或放大）
+            this.openPopupWindow(d);
+      }
+    } else {
+      this.isNodeSelected = false;
+    }
   })
   .on("mouseover", function(event, d) {  // 修改这一行
     d3.select(this).style("stroke", "#999").style("stroke-width", "4px");
